@@ -6,7 +6,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; $debug = 1; print "1..17\n"; }
+BEGIN { $| = 1; $debug = 1; print "1..18\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Net::Patricia;
 $loaded = 1;
@@ -120,6 +120,13 @@ if (3 == $t->climb(sub { print "climbing at $_[0]\n" })) {
 }
 
 $t->climb;
+
+eval '$t->add_string("_")'; # invalid key
+if ($@ && $@ =~ m/invalid/i) {
+   print "ok 18\n"
+} else {
+   print "not ok 18\n"
+}
 
 undef $t;
 

@@ -15,7 +15,7 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-# $Id: Patricia.pm,v 1.8 2000/10/18 18:44:26 dplonka Exp $
+# $Id: Patricia.pm,v 1.9 2000/10/23 17:39:13 dplonka Exp $
 # Dave Plonka <plonka@doit.wisc.edu>
 
 package Net::Patricia;
@@ -33,7 +33,7 @@ require AutoLoader;
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
 @EXPORT_OK = ();
-'$Revision: 1.8 $' =~ m/(\d+)\.(\d+)/ && (( $VERSION ) = sprintf("%d.%03d", $1, $2));
+'$Revision: 1.9 $' =~ m/(\d+)\.(\d+)/ && (( $VERSION ) = sprintf("%d.%03d", $1, $2));
 
 sub AUTOLOAD {
     # This AUTOLOAD is used to 'autoload' constants from the constant()

@@ -173,7 +173,9 @@ add_string(tree, string, ...)
 	   	prefix_t *prefix;
 	   	Net__PatriciaNode node;
 	PPCODE:
-	   	prefix = ascii2prefix(AF_INET, string);
+	   	if ((prefix_t *)0 == (prefix = ascii2prefix(AF_INET, string))) {
+                   croak("invalid key");
+		}
 	   	node = patricia_lookup(tree, prefix);
 	   	Deref_Prefix(prefix);
 		if ((patricia_node_t *)0 != node) {
@@ -273,18 +275,22 @@ void
 remove_string(tree, string)
 	Net::Patricia			tree
 	char *				string
+	PREINIT:
+		/* FIXME for AF_INET6: */
+	   	prefix_t *prefix;
+	   	Net__PatriciaNode node;
 	PPCODE:
-		{
-		   /* FIXME for AF_INET6: */
-	   	   prefix_t *prefix = ascii2prefix(AF_INET, string);
-	   	   Net__PatriciaNode node = patricia_search_exact(tree, prefix);
-		   if ((Net__PatriciaNode)0 != node) {
-		      XPUSHs(sv_mortalcopy((SV *)node->data));
-		      deref_data(node->data);
-		      patricia_remove(tree, node);
-		   } else {
-		      XSRETURN_UNDEF;
-		   }
+		/* FIXME for AF_INET6: */
+	   	if ((prefix_t *)0 == (prefix = ascii2prefix(AF_INET, string))) {
+                   croak("invalid key");
+		}
+	   	node = patricia_search_exact(tree, prefix);
+		if ((Net__PatriciaNode)0 != node) {
+		   XPUSHs(sv_mortalcopy((SV *)node->data));
+		   deref_data(node->data);
+		   patricia_remove(tree, node);
+		} else {
+		   XSRETURN_UNDEF;
 		}
 
 size_t

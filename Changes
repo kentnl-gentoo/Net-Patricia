@@ -1,5 +1,14 @@
 Revision history for Perl extension Net::Patricia.
 
+1.009 Mon Oct 23 12:45 2000
+        - changed add_string and remove_string methods so that they croak if
+	  ascii2prefix doesn't grok the key string value.
+	  Previously, bad key values would cause perl to abort with this error:
+
+	     perl: patricia.c:645: patricia_lookup: Assertion `prefix' failed.
+
+	  which was reported by Freddy Frouin <freddy.frouin@fluxus.net>
+
 1.008 Wed Oct 18 13:46 2000
 	- change XS code to just store a pointer to user data in the
 	  Patricia Trie node, rather than a pointer to a perl reference
