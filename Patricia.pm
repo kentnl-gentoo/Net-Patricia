@@ -15,46 +15,19 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-# $Id: Patricia.pm,v 1.9 2000/10/23 17:39:13 dplonka Exp $
+# $Id: Patricia.pm,v 1.10 2000/10/30 15:53:43 dplonka Exp $
 # Dave Plonka <plonka@doit.wisc.edu>
 
 package Net::Patricia;
 
 use strict;
 use Carp;
-use vars qw($VERSION @ISA @EXPORT_OK $AUTOLOAD);
+use vars qw($VERSION @ISA);
 
-require Exporter;
 require DynaLoader;
-require AutoLoader;
 
-@ISA = qw(Exporter DynaLoader);
-# Items to export into callers namespace by default. Note: do not export
-# names by default without a very good reason. Use EXPORT_OK instead.
-# Do not simply export all your public functions/methods/constants.
-@EXPORT_OK = ();
-'$Revision: 1.9 $' =~ m/(\d+)\.(\d+)/ && (( $VERSION ) = sprintf("%d.%03d", $1, $2));
-
-sub AUTOLOAD {
-    # This AUTOLOAD is used to 'autoload' constants from the constant()
-    # XS function.  If a constant is not found then control is passed
-    # to the AUTOLOAD in AutoLoader.
-
-    my $constname;
-    ($constname = $AUTOLOAD) =~ s/.*:://;
-    my $val = constant($constname, @_ ? $_[0] : 0);
-    if ($! != 0) {
-	if ($! =~ /Invalid/) {
-	    $AutoLoader::AUTOLOAD = $AUTOLOAD;
-	    goto &AutoLoader::AUTOLOAD;
-	}
-	else {
-		croak "Your vendor has not defined Net::Patricia macro $constname";
-	}
-    }
-    eval "sub $AUTOLOAD { $val }";
-    goto &$AUTOLOAD;
-}
+@ISA = qw(DynaLoader);
+'$Revision: 1.10 $' =~ m/(\d+)\.(\d+)/ && (( $VERSION ) = sprintf("%d.%03d", $1, $2));
 
 bootstrap Net::Patricia $VERSION;
 

@@ -1,5 +1,10 @@
 Revision history for Perl extension Net::Patricia.
 
+1.010 Mon Oct 30 09:51 2000
+	- applied patch from Graham Barr <gbarr@pobox.com> which
+	  contained a memory leak fix and removed the unnecessary
+	  Exporter and AutoLoader stuff.
+
 1.009 Mon Oct 23 12:45 2000
         - changed add_string and remove_string methods so that they croak if
 	  ascii2prefix doesn't grok the key string value.

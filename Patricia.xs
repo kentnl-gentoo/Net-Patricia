@@ -10,134 +10,6 @@ extern "C" {
 
 #include "libpatricia/patricia.h"
 
-static int
-not_here(s)
-char *s;
-{
-    croak("%s not implemented on this architecture", s);
-    return -1;
-}
-
-static double
-constant(name, arg)
-char *name;
-int arg;
-{
-    errno = 0;
-    switch (*name) {
-    case 'A':
-	break;
-    case 'B':
-	break;
-    case 'C':
-	break;
-    case 'D':
-	break;
-    case 'E':
-	break;
-    case 'F':
-	break;
-    case 'G':
-	break;
-    case 'H':
-	break;
-    case 'I':
-	break;
-    case 'J':
-	break;
-    case 'K':
-	break;
-    case 'L':
-	break;
-    case 'M':
-	break;
-    case 'N':
-	break;
-    case 'O':
-	break;
-    case 'P':
-	break;
-    case 'Q':
-	break;
-    case 'R':
-	break;
-    case 'S':
-	break;
-    case 'T':
-	break;
-    case 'U':
-	break;
-    case 'V':
-	break;
-    case 'W':
-	break;
-    case 'X':
-	break;
-    case 'Y':
-	break;
-    case 'Z':
-	break;
-    case 'a':
-	break;
-    case 'b':
-	break;
-    case 'c':
-	break;
-    case 'd':
-	break;
-    case 'e':
-	break;
-    case 'f':
-	break;
-    case 'g':
-	break;
-    case 'h':
-	break;
-    case 'i':
-	break;
-    case 'j':
-	break;
-    case 'k':
-	break;
-    case 'l':
-	break;
-    case 'm':
-	break;
-    case 'n':
-	break;
-    case 'o':
-	break;
-    case 'p':
-	break;
-    case 'q':
-	break;
-    case 'r':
-	break;
-    case 's':
-	break;
-    case 't':
-	break;
-    case 'u':
-	break;
-    case 'v':
-	break;
-    case 'w':
-	break;
-    case 'x':
-	break;
-    case 'y':
-	break;
-    case 'z':
-	break;
-    }
-    errno = EINVAL;
-    return 0;
-
-not_there:
-    errno = ENOENT;
-    return 0;
-}
-
 static void deref_data(SV *data) {
    SvREFCNT_dec(data);
    data = (void *)0;
@@ -149,11 +21,6 @@ typedef patricia_node_t *Net__PatriciaNode;
 MODULE = Net::Patricia		PACKAGE = Net::Patricia
 
 PROTOTYPES: ENABLE
-
-double
-constant(name,arg)
-	char *		name
-	int		arg
 
 Net::Patricia
 new(class)
@@ -180,10 +47,12 @@ add_string(tree, string, ...)
 	   	Deref_Prefix(prefix);
 		if ((patricia_node_t *)0 != node) {
 		   /* { */
-		   node->data = ST(items-1);
-		   SvREFCNT_inc(ST(items-1));
+		   if (node->data) {
+		      deref_data(node->data);
+		   }
+		   node->data = newSVsv(ST(items-1));
 		   /* } */
-		   PUSHs(sv_mortalcopy((SV *)node->data));
+		   PUSHs((SV*)node->data);
 		} else {
 		   XSRETURN_UNDEF;
 		}
@@ -194,11 +63,16 @@ match_string(tree, string)
 	char *				string
 	PPCODE:
 		{
+		   patricia_node_t *node;
+	   	   prefix_t *prefix;
 		   /* FIXME for AF_INET6: */
-		   patricia_node_t *node
-		    = patricia_search_best(tree, ascii2prefix(AF_INET, string));
+	   	   if ((prefix_t *)0 == (prefix = ascii2prefix(AF_INET, string))) {
+                      croak("invalid key");
+		   }
+		   node = patricia_search_best(tree, prefix);
+	   	   Deref_Prefix(prefix);
                    if ((patricia_node_t *)0 != node) {
-		      XPUSHs(sv_mortalcopy((SV *)node->data));
+		      XPUSHs((SV *)node->data);
 		   } else {
 		      XSRETURN_UNDEF;
 		   }
@@ -210,11 +84,16 @@ match_exact_string(tree, string)
 	char *				string
 	PPCODE:
 		{
+		   patricia_node_t *node;
+	   	   prefix_t *prefix;
 		   /* FIXME for AF_INET6: */
-		   patricia_node_t *node
-		   = patricia_search_exact(tree, ascii2prefix(AF_INET, string));
+	   	   if ((prefix_t *)0 == (prefix = ascii2prefix(AF_INET, string))) {
+                      croak("invalid key");
+		   }
+		   node = patricia_search_exact(tree, prefix);
+	   	   Deref_Prefix(prefix);
                    if ((patricia_node_t *)0 != node) {
-		      XPUSHs(sv_mortalcopy((SV *)node->data));
+		      XPUSHs((SV *)node->data);
 		   } else {
 		      XSRETURN_UNDEF;
 		   }
@@ -235,7 +114,7 @@ match_integer(tree, integer)
 		   prefix.ref_count = 0;
 		   node = patricia_search_best(tree, &prefix);
                    if ((patricia_node_t *)0 != node) {
-		      XPUSHs(sv_mortalcopy((SV *)node->data));
+		      XPUSHs((SV *)node->data);
 		   } else {
 		      XSRETURN_UNDEF;
 		   }
@@ -265,7 +144,7 @@ match_exact_integer(tree, integer, ...)
 		   prefix.ref_count = 0;
 		   node = patricia_search_exact(tree, &prefix);
                    if ((patricia_node_t *)0 != node) {
-		      XPUSHs(sv_mortalcopy((SV *)node->data));
+		      XPUSHs((SV *)node->data);
 		   } else {
 		      XSRETURN_UNDEF;
 		   }
@@ -285,6 +164,7 @@ remove_string(tree, string)
                    croak("invalid key");
 		}
 	   	node = patricia_search_exact(tree, prefix);
+	   	Deref_Prefix(prefix);
 		if ((Net__PatriciaNode)0 != node) {
 		   XPUSHs(sv_mortalcopy((SV *)node->data));
 		   deref_data(node->data);
