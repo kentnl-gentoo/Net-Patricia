@@ -1,7 +1,30 @@
 Revision history for Perl extension Net::Patricia.
 
+TODO
+        - add AF_INET6 support
+        - add POD describing Graham Barr's API improvements
+
+1.014 Thu Dec  8 18:05 2005
+        - fixed the "climb_inorder" item in the POD
+
+1.013 Thu Dec  8 17:36 2005
+        - fixed a perl stack handling bug in the previous release.
+
+1.012 Wed Dec  7 14:59 2005
+        - added climb_inorder method requested by George Michaelson.
+	- included <sys/types.h> for u_* definitions on FreeBSD 5 as
+	  suggested by Brian McDonald.
+        - tested for windows environment to include winsock
+	- patched libpatricia to get u_* types on FreeBSD 5.x
+	  from Brian McDonald
+
+1.011 Mon Oct 30 15:13 2000
+	- applied api-patch from Graham Barr
+	- added description of match_string to BUGS section of POD
+	  from John Payne
+
 1.010 Mon Oct 30 09:51 2000
-	- applied patch from Graham Barr <gbarr@pobox.com> which
+	- applied patch from Graham Barr which
 	  contained a memory leak fix and removed the unnecessary
 	  Exporter and AutoLoader stuff.
 

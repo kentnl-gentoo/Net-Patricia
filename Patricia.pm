@@ -1,5 +1,5 @@
 #  Net::Patricia - Patricia Trie perl module for fast IP address lookups
-#  Copyright (C) 2000  Dave Plonka
+#  Copyright (C) 2000-2005  Dave Plonka
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-# $Id: Patricia.pm,v 1.10 2000/10/30 15:53:43 dplonka Exp $
+# $Id: Patricia.pm,v 1.14 2005/12/09 00:03:56 dplonka Exp $
 # Dave Plonka <plonka@doit.wisc.edu>
 
 package Net::Patricia;
@@ -23,17 +23,102 @@ package Net::Patricia;
 use strict;
 use Carp;
 use vars qw($VERSION @ISA);
+use Socket qw(AF_INET inet_aton);
 
 require DynaLoader;
 
 @ISA = qw(DynaLoader);
-'$Revision: 1.10 $' =~ m/(\d+)\.(\d+)/ && (( $VERSION ) = sprintf("%d.%03d", $1, $2));
+'$Revision: 1.14 $' =~ m/(\d+)\.(\d+)/ && (( $VERSION ) = sprintf("%d.%03d", $1, $2));
 
 bootstrap Net::Patricia $VERSION;
 
-# Preloaded methods go here.
+sub new {
+  my ($class, $type) = @_;
+  $type ||= AF_INET;
 
-# Autoload methods go after =cut, and are processed by the autosplit program.
+  if ($type == AF_INET) {
+    return bless _new(32), 'Net::Patricia::AF_INET';
+  }
+
+  undef;
+}
+
+##
+## Compat functions
+##
+
+sub _ip_bits {
+  my $str = shift;
+  my $bits = ($str =~ s,/(\d+)$,,) ? $1 : 32;
+  ($str,$bits);
+}
+
+sub add_string {
+  my ($self,$str,$data) = @_;
+  $data = $str unless @_ > 2;
+  $self->add(_ip_bits($str),$data);
+}
+
+sub match_string {
+  my ($self,$str) = @_;
+  $self->match(_ip_bits($str))
+}
+
+sub match_exact_string {
+  my ($self,$str) = @_;
+  $self->exact(_ip_bits($str))
+}
+
+sub match_exact_integer {
+  shift->exact_integer(@_)
+}
+
+sub remove_string {
+  my ($self,$str) = @_;
+  $self->remove(_ip_bits($str))
+}
+
+##
+## AF_INET
+##
+
+@Net::Patricia::AF_INET::ISA = qw(Net::Patricia);
+
+sub Net::Patricia::AF_INET::add {
+  my ($self, $ip, $bits, $data) = @_;
+  $data ||= $bits ? "$ip/$bits" : $ip;
+  my $packed = inet_aton($ip) || croak("invalid key");
+  _add($self,AF_INET,$packed,$bits || 32, $data);
+}
+
+sub Net::Patricia::AF_INET::match_integer {
+  my ($self, $num, $bits) = @_;
+  _match($self,AF_INET,pack("N",$num),$bits || 32);
+}
+
+sub Net::Patricia::AF_INET::exact_integer {
+  my ($self, $num, $bits) = @_;
+  _exact($self,AF_INET,pack("N",$num),$bits || 32);
+}
+
+sub Net::Patricia::AF_INET::match {
+  my ($self, $ip, $bits) = @_;
+  my $packed = inet_aton($ip) || croak("invalid key");
+  _match($self,AF_INET,$packed,$bits || 32);
+}
+
+sub Net::Patricia::AF_INET::exact {
+  my ($self, $ip, $bits) = @_;
+  my $packed = inet_aton($ip) || croak("invalid key");
+  _exact($self,AF_INET,$packed,$bits || 32);
+}
+
+sub Net::Patricia::AF_INET::remove {
+  my ($self, $ip, $bits) = @_;
+  my $packed = inet_aton($ip) || return undef;
+  _remove($self,AF_INET,$packed,$bits || 32);
+}
+
 
 1;
 __END__
@@ -192,7 +277,33 @@ undef on failure.
    $pt->climb([CODEREF]);
 
 This method climbs the Patricia Trie, visiting each node as it does
-so.
+so.  It performs a non-recursive, "preorder" traversal.
+
+The CODEREF argument is optional.  It is a perl code reference used to
+specify a user-defined subroutine to be called when visiting each
+node.  The node's user data will be passed as the sole argument to that
+subroutine.
+
+This method returns the number of nodes successfully visited while
+climbing the Trie.  That is, without a CODEREF argument, it simply
+counts the number of nodes in the Patricia Trie.
+
+Note that currently the return value from your CODEREF subroutine is
+ignored.  In the future the climb method may return the number of times
+your subroutine returned non-zero, as it is called once per node.  So,
+if you are currently relying on the climb return value to accurately
+report a count of the number of nodes in the Patricia Trie, it would be
+prudent to have your subroutine return a non-zero value.
+
+This method is called climb() rather than walk() because climbing trees
+(and therfore tries) is a more popular pass-time than walking them.
+
+=item B<climb_inorder>
+
+   $pt->climb_inorder([CODEREF]);
+
+This method climbs the Patricia Trie, visiting each node in order as it
+does so.  That is, it performs an "inorder" traversal.
 
 The CODEREF argument is optional.  It is a perl code reference used to
 specify a user-defined subroutine to be called when visiting each
@@ -217,22 +328,27 @@ This method is called climb() rather than walk() because climbing trees
 
 =head1 BUGS
 
-I've only had the opportunity to test this code on GNU/Linux and
-Solaris.  [Why is it that I have fewer platforms available to me in
-academia than I used to have in the private industry?  Ugh.]  As such I
-am somewhat concerned about the portability of the C code on which this
-module is based and whether or not the resulting objects will link on
-other platforms.  Please send me reports, preferably including fixes
-for my Makefile.PL files and such.
+The match_string method ignores the mask bits/width, if specified, in
+its argument.  So, if you add two prefixes with the same base address
+but different mask widths, this module will match the most-specific
+prefix even if that prefix doesn't wholly cotain the prefix specified
+by the match argument.  For example:
 
-This is the first XSUB perl extension that I have written.  Consider
-yourself warned! ;^)  I'm particularly concerned as to whether or not
-my XS code is correct and whether or not this code leaks memory.  I've
-made an effort to avoid leaks in my use of the C patricialib API and in
-my manipulation of perl xVs, but am not sure if I have been successful
-in either case.  If leaks are discovered please report them to me as
-they are surely my fault and not that of the authors of the code on
-which this module is based.
+   use Net::Patricia;
+   my $pt = new Net::Patricia;
+   $pt->add_string('192.168.0.0/25');
+   $pt->add_string('192.168.0.0/16');
+   print $pt->match_string('192.168.0.0/24'), "\n";
+
+prints "192.168.0.0/25", just as if you had called:
+
+   print $pt->match_string('192.168.0.0'), "\n";
+
+This issue was reported to me by John Payne, who also provided a
+candidate patch, but I have not applied it since I hesitate to change
+this behavior which was inherited from MRT.  Consequently, this module
+might seem to violate the principle of least surprise if you specific
+the mask bits when trying to find the best match.
 
 Methods to add or remove nodes using integer arguments are yet to be
 implemented.  This was a lower priority since it is less necessary to
@@ -255,7 +371,7 @@ subroutine return a non-zero value.
 
 Dave Plonka <plonka@doit.wisc.edu>
 
-Copyright (C) 2000  Dave Plonka.  This program is free software; you
+Copyright (C) 2000-2005  Dave Plonka.  This program is free software; you
 can redistribute it and/or modify it under the terms of the GNU General
 Public License as published by the Free Software Foundation; either
 version 2 of the License, or (at your option) any later version.

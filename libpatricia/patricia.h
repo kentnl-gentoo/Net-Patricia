@@ -1,5 +1,5 @@
 /*
- * $Id: patricia.h,v 1.4 2000/09/29 19:28:07 dplonka Exp $
+ * $Id: patricia.h,v 1.6 2005/12/07 20:53:01 dplonka Exp $
  * Dave Plonka <plonka@doit.wisc.edu>
  *
  * This product includes software developed by the University of Michigan,
@@ -25,7 +25,15 @@ typedef void (*void_fn_t)();
 
 #define addroute make_and_lookup
 
-#include <netinet/in.h> /* for struct in_addr */
+#include <sys/types.h> /* for u_* definitions (on FreeBSD 5) */
+
+#include <errno.h> /* for EAFNOSUPPORT */
+#ifndef EAFNOSUPPORT
+#  defined EAFNOSUPPORT WSAEAFNOSUPPORT
+#  include <winsock.h>
+#else
+#  include <netinet/in.h> /* for struct in_addr */
+#endif
 
 #include <sys/socket.h> /* for AF_INET */
 

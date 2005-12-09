@@ -54,7 +54,7 @@ print $t->add_string('10.0.0.0/8', $ten)? "ok 8\n" : "not ok 8\n";
 
 print("Destructor 10 should *not* have run yet.\n") if $debug;
 
-foreach my $subnet (qw(10.42.42.0/24 10.42.69.0/24)) {
+foreach my $subnet (qw(10.42.42.0/31 10.42.42.0/26 10.42.42.0/24 10.42.42.0/32 10.42.69.0/24)) {
    $t->add_string($subnet) || die
 }
 
@@ -113,7 +113,7 @@ if (!$t->match_exact_integer(167772160, 8)) { # 10.0.0.0
 # print "YOU SHOULD SEE A USAGE ERROR HERE:\n";
 # $t->match_exact_integer(167772160, 8, 10);
 
-if (3 == $t->climb(sub { print "climbing at $_[0]\n" })) {
+if (6 == $t->climb_inorder(sub { print "climbing at $_[0]\n" })) {
    print "ok 17\n"
 } else {
    print "not ok 17\n"

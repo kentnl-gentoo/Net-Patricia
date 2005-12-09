@@ -1,5 +1,5 @@
 /*
- * $Id: patricia.c,v 1.4 2000/09/29 19:28:07 dplonka Exp $
+ * $Id: patricia.c,v 1.7 2005/12/07 20:46:41 dplonka Exp $
  * Dave Plonka <plonka@doit.wisc.edu>
  *
  * This product includes software developed by the University of Michigan,
@@ -24,7 +24,10 @@ static char copyright[] =
 #include <stdio.h> /* sprintf, fprintf, stderr */
 #include <stdlib.h> /* free, atol, calloc */
 #include <string.h> /* memcpy, strchr, strlen */
-#include <arpa/inet.h> /* for inet_addr */
+#include <sys/types.h> /* BSD: for inet_addr */
+#include <sys/socket.h> /* BSD, Linux: for inet_addr */
+#include <netinet/in.h> /* BSD, Linux: for inet_addr */
+#include <arpa/inet.h> /* BSD, Linux, Solaris: for inet_addr */
 
 #include "patricia.h"
 
@@ -459,6 +462,28 @@ patricia_process (patricia_tree_t *patricia, void_fn_t func)
     PATRICIA_WALK (patricia->head, node) {
 	func (node->prefix, node->data);
     } PATRICIA_WALK_END;
+}
+
+size_t
+patricia_walk_inorder(patricia_node_t *node, void_fn_t func)
+{
+    size_t n = 0;
+    assert(func);
+
+    if (node->l) {
+         n += patricia_walk_inorder(node->l, func);
+    }
+
+    if (node->prefix) {
+	func(node->prefix, node->data);
+	n++;
+    }
+	
+    if (node->r) {
+         n += patricia_walk_inorder(node->r, func);
+    }
+
+    return n;
 }
 
 
