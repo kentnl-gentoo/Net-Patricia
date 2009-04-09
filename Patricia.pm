@@ -28,10 +28,10 @@ use vars qw($VERSION @ISA);
 use Socket qw(AF_INET inet_aton inet_ntoa);
 
 require DynaLoader;
-require 5.8.1;
+require 5.6.0;
 
 @ISA = qw(DynaLoader);
-'$Revision: 1.14.51 $' =~ m/(\d+)\.(\d+)(\.\d+)?/ && ( $VERSION = qv("$1.$2$3"));
+'$Revision: 1.14.52 $' =~ m/(\d+)\.(\d+)(\.\d+)?/ && ( $VERSION = "$1.$2$3");
 
 bootstrap Net::Patricia $VERSION;
 
