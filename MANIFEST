@@ -13,3 +13,4 @@ libpatricia/patricia.h
 demo/demo.c
 typemap
 COPYING
+META.yml                                 Module meta-data (added by MakeMaker)

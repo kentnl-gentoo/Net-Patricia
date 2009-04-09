@@ -6,7 +6,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; $debug = 1; print "1..18\n"; }
+BEGIN { $| = 1; $debug = 1; print "1..19\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Net::Patricia;
 $loaded = 1;
@@ -127,6 +127,10 @@ if ($@ && $@ =~ m/invalid/i) {
 } else {
    print "not ok 18\n"
 }
+
+$t->add_string('0/0');
+
+print $t->match_string("10.0.0.1")?"ok 19\n":"not ok 19\n";
 
 undef $t;
 

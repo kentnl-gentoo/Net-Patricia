@@ -639,7 +639,7 @@ patricia_search_best2 (patricia_tree_t *patricia, prefix_t *prefix, int inclusiv
 #endif /* PATRICIA_DEBUG */
 	if (comp_with_mask (prefix_tochar (node->prefix), 
 			    prefix_tochar (prefix),
-			    node->prefix->bitlen)) {
+			    node->prefix->bitlen) && node->prefix->bitlen <= bitlen) {
 #ifdef PATRICIA_DEBUG
             fprintf (stderr, "patricia_search_best: found %s/%d\n", 
 	             prefix_toa (node->prefix), node->prefix->bitlen);

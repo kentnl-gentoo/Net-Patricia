@@ -140,7 +140,7 @@ not_there:
 
 #define Fill_Prefix(p,f,a,b,mb) \
 	do { \
-		if (b <= 0 || b > mb) \
+		if (b < 0 || b > mb) \
 		  croak("invalid key"); \
 		memcpy(&p.add.sin, a, (mb+7)/8); \
 		p.family = f; \

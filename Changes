@@ -4,6 +4,10 @@ TODO
         - add AF_INET6 support
         - add POD describing Graham Barr's API improvements
 
+1.015 Sun Jan 25 19:07 2009 (alpha)
+	- fixed bugs #14244, #20219
+	- added _integer methods to add/remove entries
+
 1.014 Thu Dec  8 18:05 2005
         - fixed the "climb_inorder" item in the POD
 

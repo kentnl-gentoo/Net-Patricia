@@ -1,5 +1,6 @@
 #  Net::Patricia - Patricia Trie perl module for fast IP address lookups
 #  Copyright (C) 2000-2005  Dave Plonka
+#  Copyright (C) 2009       Dave Plonka & Philip Prindeville
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -15,20 +16,21 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-# $Id: Patricia.pm,v 1.14 2005/12/09 00:03:56 dplonka Exp $
 # Dave Plonka <plonka@doit.wisc.edu>
+# Philip Prindeville <philipp@redfish-solutions.com>
 
 package Net::Patricia;
 
 use strict;
 use Carp;
 use vars qw($VERSION @ISA);
-use Socket qw(AF_INET inet_aton);
+use Socket qw(AF_INET inet_aton inet_ntoa);
 
 require DynaLoader;
+require 5.8.1;
 
 @ISA = qw(DynaLoader);
-'$Revision: 1.14 $' =~ m/(\d+)\.(\d+)/ && (( $VERSION ) = sprintf("%d.%03d", $1, $2));
+'$Revision: 1.14.50 $' =~ m/(\d+)\.(\d+)(\.\d+)?/ && ( $VERSION = qv("$1.$2$3"));
 
 bootstrap Net::Patricia $VERSION;
 
@@ -86,39 +88,51 @@ sub remove_string {
 
 sub Net::Patricia::AF_INET::add {
   my ($self, $ip, $bits, $data) = @_;
-  $data ||= $bits ? "$ip/$bits" : $ip;
+  $data ||= defined $bits ? "$ip/$bits" : $ip;
   my $packed = inet_aton($ip) || croak("invalid key");
-  _add($self,AF_INET,$packed,$bits || 32, $data);
+  _add($self,AF_INET,$packed,(defined $bits ? $bits : 32), $data);
+}
+
+sub Net::Patricia::AF_INET::add_integer {
+  my ($self, $num, $bits, $data) = @_;
+  my $packed = pack("N", $num);
+  my $ip = inet_ntoa($packed) || croak("invalid address");
+  $data ||= defined $bits ? "$ip/$bits" : $ip;
+  _add($self,AF_INET,$packed,(defined $bits ? $bits : 32), $data);
 }
 
 sub Net::Patricia::AF_INET::match_integer {
   my ($self, $num, $bits) = @_;
-  _match($self,AF_INET,pack("N",$num),$bits || 32);
+  _match($self,AF_INET,pack("N",$num),(defined $bits ? $bits : 32));
 }
 
 sub Net::Patricia::AF_INET::exact_integer {
   my ($self, $num, $bits) = @_;
-  _exact($self,AF_INET,pack("N",$num),$bits || 32);
+  _exact($self,AF_INET,pack("N",$num),(defined $bits ? $bits : 32));
 }
 
 sub Net::Patricia::AF_INET::match {
   my ($self, $ip, $bits) = @_;
   my $packed = inet_aton($ip) || croak("invalid key");
-  _match($self,AF_INET,$packed,$bits || 32);
+  _match($self,AF_INET,$packed,(defined $bits ? $bits : 32));
 }
 
 sub Net::Patricia::AF_INET::exact {
   my ($self, $ip, $bits) = @_;
   my $packed = inet_aton($ip) || croak("invalid key");
-  _exact($self,AF_INET,$packed,$bits || 32);
+  _exact($self,AF_INET,$packed,(defined $bits ? $bits : 32));
 }
 
 sub Net::Patricia::AF_INET::remove {
   my ($self, $ip, $bits) = @_;
   my $packed = inet_aton($ip) || return undef;
-  _remove($self,AF_INET,$packed,$bits || 32);
+  _remove($self,AF_INET,$packed,(defined $bits ? $bits : 32));
 }
 
+sub Net::Patricia::AF_INET::remove_integer {
+  my ($self, $num, $bits) = @_;
+  _remove($self,AF_INET,pack("N",$num),(defined $bits ? $bits : 32));
+}
 
 1;
 __END__
@@ -328,34 +342,6 @@ This method is called climb() rather than walk() because climbing trees
 
 =head1 BUGS
 
-The match_string method ignores the mask bits/width, if specified, in
-its argument.  So, if you add two prefixes with the same base address
-but different mask widths, this module will match the most-specific
-prefix even if that prefix doesn't wholly cotain the prefix specified
-by the match argument.  For example:
-
-   use Net::Patricia;
-   my $pt = new Net::Patricia;
-   $pt->add_string('192.168.0.0/25');
-   $pt->add_string('192.168.0.0/16');
-   print $pt->match_string('192.168.0.0/24'), "\n";
-
-prints "192.168.0.0/25", just as if you had called:
-
-   print $pt->match_string('192.168.0.0'), "\n";
-
-This issue was reported to me by John Payne, who also provided a
-candidate patch, but I have not applied it since I hesitate to change
-this behavior which was inherited from MRT.  Consequently, this module
-might seem to violate the principle of least surprise if you specific
-the mask bits when trying to find the best match.
-
-Methods to add or remove nodes using integer arguments are yet to be
-implemented.  This was a lower priority since it is less necessary to
-avoid the overhead involved in translation from a string representation
-since add and remove operations are usually performed less frequently
-than matching operations.
-
 This modules does not yet support AF_INET6 (IP version 6) 128 bit
 addresses, although the underlying patricialib C code does.
 
@@ -370,8 +356,10 @@ subroutine return a non-zero value.
 =head1 AUTHOR
 
 Dave Plonka <plonka@doit.wisc.edu>
+Philip Prindeville <philipp@redfish-solutions.com>
 
-Copyright (C) 2000-2005  Dave Plonka.  This program is free software; you
+Copyright (C) 2000-2005  Dave Plonka.  Copyright (C) 2009  Dave Plonka
+& Philip Prindeville.  This program is free software; you
 can redistribute it and/or modify it under the terms of the GNU General
 Public License as published by the Free Software Foundation; either
 version 2 of the License, or (at your option) any later version.
