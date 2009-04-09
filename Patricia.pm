@@ -21,6 +21,7 @@
 
 package Net::Patricia;
 
+use version;
 use strict;
 use Carp;
 use vars qw($VERSION @ISA);
@@ -30,7 +31,7 @@ require DynaLoader;
 require 5.8.1;
 
 @ISA = qw(DynaLoader);
-'$Revision: 1.14.50 $' =~ m/(\d+)\.(\d+)(\.\d+)?/ && ( $VERSION = qv("$1.$2$3"));
+'$Revision: 1.14.51 $' =~ m/(\d+)\.(\d+)(\.\d+)?/ && ( $VERSION = qv("$1.$2$3"));
 
 bootstrap Net::Patricia $VERSION;
 
