@@ -31,7 +31,7 @@ require DynaLoader;
 require 5.6.0;
 
 @ISA = qw(DynaLoader);
-'$Revision: 1.15 $' =~ m/(\d+)\.(\d+)(\.\d+)?/ && ( $VERSION = "$1.$2$3");
+'$Revision: 1.15_01 $' =~ m/(\d+)\.(\d+)(_\d+|)/ && ( $VERSION = "$1.$2$3");
 
 bootstrap Net::Patricia $VERSION;
 
