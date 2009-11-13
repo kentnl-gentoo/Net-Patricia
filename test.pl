@@ -1,15 +1,17 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
 
+use strict qw(vars);
+
 ######################### We start with some black magic to print on failure.
 
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; $debug = 1; print "1..19\n"; }
-END {print "not ok 1\n" unless $loaded;}
+BEGIN { $| = 1; $::debug = 1; print "1..22\n"; }
+END {print "not ok 1\n" unless $::loaded;}
 use Net::Patricia;
-$loaded = 1;
+$::loaded = 1;
 print "ok 1\n";
 
 ######################### End of black magic.
@@ -18,7 +20,9 @@ print "ok 1\n";
 # (correspondingly "not ok 13") depending on the success of chunk 13
 # of the test code):
 
-print ref($t = new Net::Patricia)? "ok 2\n" : "not ok 2\n";
+my $t = new Net::Patricia;
+
+print ref($t)? "ok 2\n" : "not ok 2\n";
 
 print $t->add_string('127.0.0.0/8')? "ok 3\n" : "not ok 3\n";
 
@@ -52,7 +56,7 @@ if (!$t->match_integer(42)) {
 print $t->add_string('10.0.0.0/8', $ten)? "ok 8\n" : "not ok 8\n";
 }
 
-print("Destructor 10 should *not* have run yet.\n") if $debug;
+print("Destructor 10 should *not* have run yet.\n") if $::debug;
 
 foreach my $subnet (qw(10.42.42.0/31 10.42.42.0/26 10.42.42.0/24 10.42.42.0/32 10.42.69.0/24)) {
    $t->add_string($subnet) || die
@@ -102,7 +106,7 @@ if (10 == ${$t->remove_string("10.0.0.0/8")}) {
    print "not ok 15\n"
 }
 
-print("Destructor 10 should have just run.\n") if $debug;
+print("Destructor 10 should have just run.\n") if $::debug;
 
 if (!$t->match_exact_integer(167772160, 8)) { # 10.0.0.0
    print "ok 16\n"
@@ -131,6 +135,30 @@ if ($@ && $@ =~ m/invalid/i) {
 $t->add_string('0/0');
 
 print $t->match_string("10.0.0.1")?"ok 19\n":"not ok 19\n";
+
+undef $t;
+
+# $t = new Net::Patricia::AF_INET6;
+
+$t = new Net::Patricia(AF_INET6);
+
+print ref($t)? "ok 20\n" : "not ok 20\n";
+
+$t->add_string('2001:220::/35', 'hello, world');
+
+if ('hello, world' eq $t->match_string('2001:220::/128')) {
+  print "ok 21\n";
+} else {
+  print "not ok 21\n";
+}
+
+undef $t;
+
+# $t = new Net::Patricia::AF_INET6;
+
+$t = new Net::Patricia(AF_INET);
+
+print ref($t)? "ok 22\n" : "not ok 22\n";
 
 undef $t;
 

@@ -15,6 +15,8 @@
 #ifndef _PATRICIA_H
 #define _PATRICIA_H
 
+#define HAVE_IPV6
+
 /* typedef unsigned int u_int; */
 typedef void (*void_fn_t)();
 /* { from defs.h */
@@ -97,7 +99,7 @@ make_and_lookup (patricia_tree_t *tree, char *string);
 
 /* } */
 
-#define PATRICIA_MAXBITS 128
+#define PATRICIA_MAXBITS	(sizeof(struct in6_addr) * 8)
 #define PATRICIA_NBIT(x)        (0x80 >> ((x) & 0x7f))
 #define PATRICIA_NBYTE(x)       ((x) >> 3)
 

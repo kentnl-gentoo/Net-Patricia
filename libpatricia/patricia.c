@@ -77,16 +77,16 @@ inet_pton (int af, const char *src, void *dst)
 	if (result == -1)
 	    return 0;
 	else {
-			memcpy (dst, &result, 4);
+	    memcpy (dst, &result, sizeof(struct in_addr));
 	    return 1;
-		}
 	}
+    }
 #ifdef NT
 #ifdef HAVE_IPV6
-	else if (af == AF_INET6) {
-		struct in6_addr Address;
-		return (inet6_addr(src, &Address));
-	}
+    else if (af == AF_INET6) {
+	struct in6_addr Address;
+	return (inet6_addr(src, &Address));
+    }
 #endif /* HAVE_IPV6 */
 #endif /* NT */
 #ifndef NT
@@ -104,7 +104,7 @@ my_inet_pton (int af, const char *src, void *dst)
 {
     if (af == AF_INET) {
         int i, c, val;
-        u_char xp[4] = {0, 0, 0, 0};
+        u_char xp[sizeof(struct in_addr)] = {0, 0, 0, 0};
 
         for (i = 0; ; i++) {
 	    c = *src++;
@@ -125,7 +125,7 @@ my_inet_pton (int af, const char *src, void *dst)
 	    if (i >= 3)
 		return (0);
         }
-	memcpy (dst, xp, 4);
+	memcpy (dst, xp, sizeof(struct in_addr));
         return (1);
 #ifdef HAVE_IPV6
     } else if (af == AF_INET6) {
@@ -138,6 +138,8 @@ my_inet_pton (int af, const char *src, void *dst)
 	return -1;
     }
 }
+
+#define PATRICIA_MAX_THREADS		16
 
 /* 
  * convert prefix information to ascii string with length
@@ -152,7 +154,7 @@ prefix_toa2x (prefix_t *prefix, char *buff, int with_len)
     if (buff == NULL) {
 
         struct buffer {
-            char buffs[16][48+5];
+            char buffs[PATRICIA_MAX_THREADS][48+5];
             u_int i;
         } *buffp;
 
@@ -169,11 +171,11 @@ prefix_toa2x (prefix_t *prefix, char *buff, int with_len)
 	    return (NULL);
 	}
 
-	buff = buffp->buffs[buffp->i++%16];
+	buff = buffp->buffs[buffp->i++%PATRICIA_MAX_THREADS];
     }
     if (prefix->family == AF_INET) {
 	u_char *a;
-	assert (prefix->bitlen <= 32);
+	assert (prefix->bitlen <= sizeof(struct in_addr) * 8);
 	a = prefix_touchar (prefix);
 	if (with_len) {
 	    sprintf (buff, "%d.%d.%d.%d/%d", a[0], a[1], a[2], a[3],
@@ -189,7 +191,7 @@ prefix_toa2x (prefix_t *prefix, char *buff, int with_len)
 	char *r;
 	r = (char *) inet_ntop (AF_INET6, &prefix->add.sin6, buff, 48 /* a guess value */ );
 	if (r && with_len) {
-	    assert (prefix->bitlen <= 128);
+	    assert (prefix->bitlen <= sizeof(struct in6_addr) * 8);
 	    sprintf (buff + strlen (buff), "/%d", prefix->bitlen);
 	}
 	return (buff);
@@ -220,32 +222,32 @@ prefix_t *
 New_Prefix2 (int family, void *dest, int bitlen, prefix_t *prefix)
 {
     int dynamic_allocated = 0;
-    int default_bitlen = 32;
+    int default_bitlen = sizeof(struct in_addr) * 8;
 
 #ifdef HAVE_IPV6
     if (family == AF_INET6) {
-        default_bitlen = 128;
+        default_bitlen = sizeof(struct in6_addr) * 8;
 	if (prefix == NULL) {
-            prefix = calloc(1, sizeof (prefix6_t));
+            prefix = calloc(1, sizeof (prefix_t));
 	    dynamic_allocated++;
 	}
-	memcpy (&prefix->add.sin6, dest, 16);
+	memcpy (&prefix->add.sin6, dest, sizeof(struct in6_addr));
     }
     else
 #endif /* HAVE_IPV6 */
     if (family == AF_INET) {
-		if (prefix == NULL) {
+	if (prefix == NULL) {
 #ifndef NT
             prefix = calloc(1, sizeof (prefix4_t));
 #else
-			//for some reason, compiler is getting
-			//prefix4_t size incorrect on NT
-			prefix = calloc(1, sizeof (prefix_t)); 
+	    //for some reason, compiler is getting
+	    //prefix4_t size incorrect on NT
+	    prefix = calloc(1, sizeof (prefix_t)); 
 #endif /* NT */
 		
-			dynamic_allocated++;
-		}
-		memcpy (&prefix->add.sin, dest, 4);
+	    dynamic_allocated++;
+	}
+	memcpy (&prefix->add.sin, dest, sizeof(struct in_addr));
     }
     else {
         return (NULL);
@@ -282,7 +284,7 @@ ascii2prefix (int family, char *string)
     char save[MAXLINE];
 
     if (string == NULL)
-		return (NULL);
+	return (NULL);
 
     /* easy way to handle both families */
     if (family == 0) {
@@ -293,50 +295,50 @@ ascii2prefix (int family, char *string)
     }
 
     if (family == AF_INET) {
-		maxbitlen = 32;
+	maxbitlen = sizeof(struct in_addr) * 8;
     }
 #ifdef HAVE_IPV6
     else if (family == AF_INET6) {
-		maxbitlen = 128;
+	maxbitlen = sizeof(struct in6_addr) * 8;
     }
 #endif /* HAVE_IPV6 */
 
     if ((cp = strchr (string, '/')) != NULL) {
-		bitlen = atol (cp + 1);
-		/* *cp = '\0'; */
-		/* copy the string to save. Avoid destroying the string */
-		assert (cp - string < MAXLINE);
-		memcpy (save, string, cp - string);
-		save[cp - string] = '\0';
-		string = save;
-		if (bitlen < 0 || bitlen > maxbitlen)
-			bitlen = maxbitlen;
-		}
-		else {
-			bitlen = maxbitlen;
-		}
+	bitlen = atol (cp + 1);
+	/* *cp = '\0'; */
+	/* copy the string to save. Avoid destroying the string */
+	assert (cp - string < MAXLINE);
+	memcpy (save, string, cp - string);
+	save[cp - string] = '\0';
+	string = save;
+	if (bitlen < 0 || bitlen > maxbitlen)
+	    bitlen = maxbitlen;
+	}
+	else {
+	    bitlen = maxbitlen;
+	}
 
-		if (family == AF_INET) {
-			if ((result = my_inet_pton (AF_INET, string, &sin)) <= 0)
-				return (NULL);
-			return (New_Prefix (AF_INET, &sin, bitlen));
-		}
+	if (family == AF_INET) {
+	    if ((result = my_inet_pton (AF_INET, string, &sin)) <= 0)
+		return (NULL);
+	    return (New_Prefix (AF_INET, &sin, bitlen));
+	}
 
 #ifdef HAVE_IPV6
-		else if (family == AF_INET6) {
+	else if (family == AF_INET6) {
 // Get rid of this with next IPv6 upgrade
 #if defined(NT) && !defined(HAVE_INET_NTOP)
-			inet6_addr(string, &sin6);
-			return (New_Prefix (AF_INET6, &sin6, bitlen));
+	    inet6_addr(string, &sin6);
+	    return (New_Prefix (AF_INET6, &sin6, bitlen));
 #else
-			if ((result = inet_pton (AF_INET6, string, &sin6)) <= 0)
-				return (NULL);
+	    if ((result = inet_pton (AF_INET6, string, &sin6)) <= 0)
+		return (NULL);
 #endif /* NT */
-			return (New_Prefix (AF_INET6, &sin6, bitlen));
-		}
+	    return (New_Prefix (AF_INET6, &sin6, bitlen));
+	}
 #endif /* HAVE_IPV6 */
-		else
-			return (NULL);
+	else
+	    return (NULL);
 }
 
 prefix_t *
@@ -431,7 +433,7 @@ Clear_Patricia (patricia_tree_t *patricia, void_fn_t func)
             } else if (Xsp != Xstack) {
                 Xrn = *(--Xsp);
             } else {
-                Xrn = (patricia_node_t *) 0;
+                Xrn = NULL;
             }
         }
     }
@@ -513,7 +515,7 @@ patricia_search_exact (patricia_tree_t *patricia, prefix_t *prefix)
     	        fprintf (stderr, "patricia_search_exact: take right %s/%d\n", 
 	                 prefix_toa (node->prefix), node->prefix->bitlen);
 	    else
-    	        fprintf (stderr, "patricia_search_exact: take right at %d\n", 
+    	        fprintf (stderr, "patricia_search_exact: take right at %u\n", 
 			 node->bit);
 #endif /* PATRICIA_DEBUG */
 	    node = node->r;
@@ -524,7 +526,7 @@ patricia_search_exact (patricia_tree_t *patricia, prefix_t *prefix)
     	        fprintf (stderr, "patricia_search_exact: take left %s/%d\n", 
 	                 prefix_toa (node->prefix), node->prefix->bitlen);
 	    else
-    	        fprintf (stderr, "patricia_search_exact: take left at %d\n", 
+    	        fprintf (stderr, "patricia_search_exact: take left at %u\n", 
 			 node->bit);
 #endif /* PATRICIA_DEBUG */
 	    node = node->l;
@@ -539,7 +541,7 @@ patricia_search_exact (patricia_tree_t *patricia, prefix_t *prefix)
         fprintf (stderr, "patricia_search_exact: stop at %s/%d\n", 
 	         prefix_toa (node->prefix), node->prefix->bitlen);
     else
-        fprintf (stderr, "patricia_search_exact: stop at %d\n", node->bit);
+        fprintf (stderr, "patricia_search_exact: stop at %u\n", node->bit);
 #endif /* PATRICIA_DEBUG */
     if (node->bit > bitlen || node->prefix == NULL)
 	return (NULL);
@@ -594,7 +596,7 @@ patricia_search_best2 (patricia_tree_t *patricia, prefix_t *prefix, int inclusiv
     	        fprintf (stderr, "patricia_search_best: take right %s/%d\n", 
 	                 prefix_toa (node->prefix), node->prefix->bitlen);
 	    else
-    	        fprintf (stderr, "patricia_search_best: take right at %d\n", 
+    	        fprintf (stderr, "patricia_search_best: take right at %u\n", 
 			 node->bit);
 #endif /* PATRICIA_DEBUG */
 	    node = node->r;
@@ -605,7 +607,7 @@ patricia_search_best2 (patricia_tree_t *patricia, prefix_t *prefix, int inclusiv
     	        fprintf (stderr, "patricia_search_best: take left %s/%d\n", 
 	                 prefix_toa (node->prefix), node->prefix->bitlen);
 	    else
-    	        fprintf (stderr, "patricia_search_best: take left at %d\n", 
+    	        fprintf (stderr, "patricia_search_best: take left at %u\n", 
 			 node->bit);
 #endif /* PATRICIA_DEBUG */
 	    node = node->l;
@@ -625,7 +627,7 @@ patricia_search_best2 (patricia_tree_t *patricia, prefix_t *prefix, int inclusiv
         fprintf (stderr, "patricia_search_best: stop at %s/%d\n", 
 	         prefix_toa (node->prefix), node->prefix->bitlen);
     else
-        fprintf (stderr, "patricia_search_best: stop at %d\n", node->bit);
+        fprintf (stderr, "patricia_search_best: stop at %u\n", node->bit);
 #endif /* PATRICIA_DEBUG */
 
     if (cnt <= 0)
@@ -701,7 +703,7 @@ patricia_lookup (patricia_tree_t *patricia, prefix_t *prefix)
     	        fprintf (stderr, "patricia_lookup: take right %s/%d\n", 
 	                 prefix_toa (node->prefix), node->prefix->bitlen);
 	    else
-    	        fprintf (stderr, "patricia_lookup: take right at %d\n", node->bit);
+    	        fprintf (stderr, "patricia_lookup: take right at %u\n", node->bit);
 #endif /* PATRICIA_DEBUG */
 	    node = node->r;
 	}
@@ -713,7 +715,7 @@ patricia_lookup (patricia_tree_t *patricia, prefix_t *prefix)
     	        fprintf (stderr, "patricia_lookup: take left %s/%d\n", 
 	             prefix_toa (node->prefix), node->prefix->bitlen);
 	    else
-    	        fprintf (stderr, "patricia_lookup: take left at %d\n", node->bit);
+    	        fprintf (stderr, "patricia_lookup: take left at %u\n", node->bit);
 #endif /* PATRICIA_DEBUG */
 	    node = node->l;
 	}
@@ -761,7 +763,7 @@ patricia_lookup (patricia_tree_t *patricia, prefix_t *prefix)
             fprintf (stderr, "patricia_lookup: up to %s/%d\n", 
 	             prefix_toa (node->prefix), node->prefix->bitlen);
 	else
-            fprintf (stderr, "patricia_lookup: up to %d\n", node->bit);
+            fprintf (stderr, "patricia_lookup: up to %u\n", node->bit);
 #endif /* PATRICIA_DEBUG */
     }
 
@@ -1033,6 +1035,7 @@ try_search_best (patricia_tree_t *tree, char *string)
         printf ("try_search_best: %s/%d found\n", 
 	        prefix_toa (node->prefix), node->prefix->bitlen);
     Deref_Prefix (prefix);
+    return (prefix);
 }
 
 /* } */

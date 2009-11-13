@@ -21,26 +21,39 @@
 
 package Net::Patricia;
 
-use version;
 use strict;
-use Carp;
-use vars qw($VERSION @ISA);
-use Socket qw(AF_INET inet_aton inet_ntoa);
+use warnings;
 
-require DynaLoader;
 require 5.6.0;
 
-@ISA = qw(DynaLoader);
-'$Revision: 1.15_01 $' =~ m/(\d+)\.(\d+)(_\d+|)/ && ( $VERSION = "$1.$2$3");
+use version;
+use Carp;
+use vars qw($VERSION @ISA @EXPORT);
+use Socket qw(AF_INET inet_aton inet_ntoa);
+use Socket6 qw(AF_INET6 inet_pton inet_ntop);
+
+BEGIN {
+  require Exporter;
+  require DynaLoader;
+  @ISA = qw(Exporter DynaLoader);
+  @EXPORT = qw(AF_INET AF_INET6);
+}
+
+'$Revision: 1.15_04 $' =~ m/(\d+)\.(\d+)(_\d+|)/ && ( $VERSION = "$1.$2$3");
 
 bootstrap Net::Patricia $VERSION;
 
 sub new {
   my ($class, $type) = @_;
+
   $type ||= AF_INET;
 
   if ($type == AF_INET) {
     return bless _new(32), 'Net::Patricia::AF_INET';
+  }
+
+  if ($type == AF_INET6) {
+    return bless _new(128), 'Net::Patricia::AF_INET6';
   }
 
   undef;
@@ -51,25 +64,31 @@ sub new {
 ##
 
 sub _ip_bits {
-  my $str = shift;
-  my $bits = ($str =~ s,/(\d+)$,,) ? $1 : 32;
+  my ($self, $str) = @_;
+  my $bits;
+
+  if (ref ($self) eq 'Net::Patricia::AF_INET6') { 
+	$bits = ($str =~ s,/(\d+)$,,) ? $1 : 128; 
+  } else { 
+	$bits = ($str =~ s,/(\d+)$,,) ? $1 : 32; 
+  }
   ($str,$bits);
 }
 
 sub add_string {
   my ($self,$str,$data) = @_;
   $data = $str unless @_ > 2;
-  $self->add(_ip_bits($str),$data);
+  $self->add($self->_ip_bits($str),$data);
 }
 
 sub match_string {
   my ($self,$str) = @_;
-  $self->match(_ip_bits($str))
+  $self->match($self->_ip_bits($str))
 }
 
 sub match_exact_string {
   my ($self,$str) = @_;
-  $self->exact(_ip_bits($str))
+  $self->exact($self->_ip_bits($str))
 }
 
 sub match_exact_integer {
@@ -78,7 +97,7 @@ sub match_exact_integer {
 
 sub remove_string {
   my ($self,$str) = @_;
-  $self->remove(_ip_bits($str))
+  $self->remove($self->_ip_bits($str))
 }
 
 ##
@@ -133,6 +152,60 @@ sub Net::Patricia::AF_INET::remove {
 sub Net::Patricia::AF_INET::remove_integer {
   my ($self, $num, $bits) = @_;
   _remove($self,AF_INET,pack("N",$num),(defined $bits ? $bits : 32));
+}
+
+##
+## AF_INET6
+##
+
+@Net::Patricia::AF_INET6::ISA = qw(Net::Patricia);
+
+sub Net::Patricia::AF_INET6::add {
+  my ($self, $ip, $bits, $data) = @_;
+  $data ||= $bits ? "$ip/$bits" : $ip;
+  my $packed = inet_pton(AF_INET6, $ip) || croak("invalid key");
+  _add($self,AF_INET6,$packed,(defined $bits ? $bits : 128), $data);
+}
+
+sub Net::Patricia::AF_INET6::add_integer {
+  my ($self, $num, $bits, $data) = @_;
+  my $packed = pack("N", $num);
+  my $ip = inet_ntop(AF_INET6, $packed) || croak("invalid address");
+  $data ||= defined $bits ? "$ip/$bits" : $ip;
+  _add($self,AF_INET6,$packed,(defined $bits ? $bits : 128), $data);
+}
+
+sub Net::Patricia::AF_INET6::match_integer {
+  my ($self, $num, $bits) = @_;
+  _match($self,AF_INET6,pack("N",$num),(defined $bits ? $bits : 128));
+}
+
+sub Net::Patricia::AF_INET6::exact_integer {
+  my ($self, $num, $bits) = @_;
+  _exact($self,AF_INET6,pack("N",$num),(defined $bits ? $bits : 128));
+}
+
+sub Net::Patricia::AF_INET6::match {
+  my ($self, $ip, $bits) = @_;
+  my $packed = inet_pton(AF_INET6, $ip) || croak("invalid key");
+  _match($self,AF_INET6,$packed,(defined $bits ? $bits : 128));
+}
+
+sub Net::Patricia::AF_INET6::exact {
+  my ($self, $ip, $bits) = @_;
+  my $packed = inet_pton(AF_INET6, $ip) || croak("invalid key");
+  _exact($self,AF_INET6,$packed,(defined $bits ? $bits : 128));
+}
+
+sub Net::Patricia::AF_INET6::remove {
+  my ($self, $ip, $bits) = @_;
+  my $packed = inet_pton(AF_INET6, $ip) || return undef;
+  _remove($self,AF_INET6,$packed,(defined $bits ? $bits : 128));
+}
+
+sub Net::Patricia::AF_INET6::remove_integer {
+  my ($self, $num, $bits) = @_;
+  _remove($self,AF_INET6,pack("N",$num),(defined $bits ? $bits : 128));
 }
 
 1;
