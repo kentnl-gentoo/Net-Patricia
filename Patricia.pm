@@ -39,7 +39,7 @@ BEGIN {
   @EXPORT = qw(AF_INET AF_INET6);
 }
 
-'$Revision: 1.15_04 $' =~ m/(\d+)\.(\d+)(_\d+|)/ && ( $VERSION = "$1.$2$3");
+'$Revision: 1.15_05 $' =~ m/(\d+)\.(\d+)(_\d+|)/ && ( $VERSION = "$1.$2$3");
 
 bootstrap Net::Patricia $VERSION;
 

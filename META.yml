@@ -1,12 +1,13 @@
 --- #YAML:1.0
 name:                Net-Patricia
-version:             1.15_04
+version:             1.15_05
 abstract:            ~
 license:             ~
 author:              ~
 generated_by:        ExtUtils::MakeMaker version 6.42
 distribution_type:   module
 requires:     
+    Socket6:                       0
 meta-spec:
     url:     http://module-build.sourceforge.net/META-spec-v1.3.html
     version: 1.3

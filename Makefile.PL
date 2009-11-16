@@ -9,6 +9,7 @@ WriteMakefile(
     'INC'	=> '',     # e.g., '-I/usr/include/other' 
     'MYEXTLIB'	=> 'libpatricia/libpatricia$(LIB_EXT)',     # e.g., '-I/usr/include/other' 
     'dist'      => {'COMPRESS'=>'gzip -9f', 'SUFFIX' => 'gz'},
+    'PREREQ_PM'	=> {'Socket6' => 0},
 );
 
 sub MY::postamble {
