@@ -29,8 +29,8 @@ require 5.6.0;
 use version;
 use Carp;
 use vars qw($VERSION @ISA @EXPORT);
-use Socket qw(AF_INET inet_aton inet_ntoa);
-use Socket6 qw(AF_INET6 inet_pton inet_ntop);
+use Socket qw(AF_INET AF_INET6 inet_aton inet_ntoa);
+use Socket6 qw(inet_pton inet_ntop);
 
 BEGIN {
   require Exporter;
@@ -39,7 +39,7 @@ BEGIN {
   @EXPORT = qw(AF_INET AF_INET6);
 }
 
-'$Revision: 1.15_05 $' =~ m/(\d+)\.(\d+)(_\d+|)/ && ( $VERSION = "$1.$2$3");
+'$Revision: 1.15_06 $' =~ m/(\d+)\.(\d+)(_\d+|)/ && ( $VERSION = "$1.$2$3");
 
 bootstrap Net::Patricia $VERSION;
 
