@@ -150,7 +150,7 @@ not_there:
 
 static void deref_data(SV *data) {
    SvREFCNT_dec(data);
-   data = (void *)0;
+   data = NULL;
 }
 
 static size_t
@@ -163,7 +163,7 @@ patricia_walk_inorder_perl(patricia_node_t *node, SV *coderef) {
     }
 
     if (node->prefix) {
-        if ((SV *)0 != coderef) {
+        if (NULL != coderef) {
             PUSHMARK(SP);
             XPUSHs(sv_mortalcopy((SV *)node->data));
             PUTBACK;
@@ -214,7 +214,7 @@ _add(tree, family, addr, bits, data)
 	PPCODE:
 		Fill_Prefix(prefix, family, addr, bits, tree->maxbits);
 	   	node = patricia_lookup(tree, &prefix);
-		if ((patricia_node_t *)0 != node) {
+		if (NULL != node) {
 		   /* { */
 		   if (node->data) {
 		      deref_data(node->data);
@@ -239,7 +239,7 @@ _match(tree, family, addr, bits)
 	PPCODE:
 		Fill_Prefix(prefix, family, addr, bits, tree->maxbits);
 		node = patricia_search_best(tree, &prefix);
-		if ((patricia_node_t *)0 != node) {
+		if (NULL != node) {
 		   XPUSHs((SV *)node->data);
 		} else {
 		   XSRETURN_UNDEF;
@@ -258,7 +258,7 @@ _exact(tree, family, addr, bits)
 	PPCODE:
 		Fill_Prefix(prefix, family, addr, bits, tree->maxbits);
 		node = patricia_search_exact(tree, &prefix);
-		if ((patricia_node_t *)0 != node) {
+		if (NULL != node) {
 		   XPUSHs((SV *)node->data);
 		} else {
 		   XSRETURN_UNDEF;
@@ -278,7 +278,7 @@ _remove(tree, family, addr, bits)
 	PPCODE:
 		Fill_Prefix(prefix, family, addr, bits, tree->maxbits);
 	   	node = patricia_search_exact(tree, &prefix);
-		if ((Net__PatriciaNode)0 != node) {
+		if (NULL != node) {
 		   XPUSHs(sv_mortalcopy((SV *)node->data));
 		   deref_data(node->data);
 		   patricia_remove(tree, node);
@@ -290,9 +290,9 @@ size_t
 climb(tree, ...)
 	Net::Patricia			tree
 	PREINIT:
-		patricia_node_t *node = (patricia_node_t *)0;
+		patricia_node_t *node = NULL;
 		size_t n = 0;
-		SV *func = (SV *)0;
+		SV *func = NULL;
 	CODE:
 		if (2 == items) {
 		   func = ST(1);
@@ -300,7 +300,7 @@ climb(tree, ...)
 	           croak("Usage: Net::Patricia::climb(tree[,CODEREF])");
 		}
 		PATRICIA_WALK (tree->head, node) {
-		   if ((SV *)0 != func) {
+		   if (NULL != func) {
 		      PUSHMARK(SP);
 		      XPUSHs(sv_mortalcopy((SV *)node->data));
 		      PUTBACK;
@@ -318,9 +318,9 @@ climb_inorder(tree, ...)
 	Net::Patricia			tree
 	PREINIT:
 		size_t n = 0;
-		SV *func = (SV *)0;
+		SV *func = NULL;
 	CODE:
-		func = (SV *)0;
+		func = NULL;
 		if (2 == items) {
 		   func = ST(1);
 		} else if (2 < items) {

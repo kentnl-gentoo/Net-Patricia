@@ -1,16 +1,16 @@
-README
 Changes
-Patricia.pm
-Patricia.xs
-MANIFEST
-Makefile.PL
-test.pl
-libpatricia/Makefile.PL
+COPYING
+demo/demo.c
 libpatricia/copyright
 libpatricia/credits.txt
+libpatricia/Makefile.PL
 libpatricia/patricia.c
 libpatricia/patricia.h
-demo/demo.c
+Makefile.PL
+MANIFEST			This list of files
+META.yml
+Patricia.pm
+Patricia.xs
+README
+t/01everything.t
 typemap
-COPYING
-META.yml                                 Module meta-data (added by MakeMaker)

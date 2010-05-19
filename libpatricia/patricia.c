@@ -1017,7 +1017,7 @@ lookup_then_remove (patricia_tree_t *tree, char *string)
 {
     patricia_node_t *node;
 
-    if (node = try_search_exact (tree, string))
+    if ((node = try_search_exact (tree, string)))
         patricia_remove (tree, node);
 }
 
@@ -1035,7 +1035,7 @@ try_search_best (patricia_tree_t *tree, char *string)
         printf ("try_search_best: %s/%d found\n", 
 	        prefix_toa (node->prefix), node->prefix->bitlen);
     Deref_Prefix (prefix);
-    return (prefix);
+    return (node);
 }
 
 /* } */
