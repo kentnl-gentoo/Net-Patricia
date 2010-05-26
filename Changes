@@ -1,12 +1,21 @@
 Revision history for Perl extension Net::Patricia.
 
 TODO
-        - add AF_INET6 support
         - add POD describing Graham Barr's API improvements
+
+1.017 Sun May 23 17:30 2010
+	- miscellaneous bug fixes
+	- add additional hybrid methods if Net::CIDR::Lite is present
+	- corrections to PM_PREREQ
+
+1.016 Sun Feb 14 11:16 2010
+	- miscellaneous bug fixes
+	- rewrote Makefile to simplify it
 
 1.015 Sun Jan 25 19:07 2009 (alpha)
 	- fixed bugs #14244, #20219
 	- added _integer methods to add/remove entries
+        - add AF_INET6 support
 
 1.014 Thu Dec  8 18:05 2005
         - fixed the "climb_inorder" item in the POD
