@@ -38,7 +38,7 @@ BEGIN {
   @EXPORT = qw(AF_INET AF_INET6);
 }
 
-'$Revision: 1.17_03 $' =~ m/(\d+)\.(\d+)((_\d+)|)/ && ( $VERSION = "$1.$2$3");
+'$Revision: 1.17_04 $' =~ m/(\d+)\.(\d+)((_\d+)|)/ && ( $VERSION = "$1.$2$3");
 
 bootstrap Net::Patricia $VERSION;
 
@@ -67,9 +67,9 @@ sub _ip_bits {
   my $bits;
 
   if (ref ($self) eq 'Net::Patricia::AF_INET6') { 
-	$bits = ($str =~ s,/(\d+)$,,) ? $1 : 128; 
+	$bits = ($str =~ s|/(\d+)$||) ? $1 : 128; 
   } else { 
-	$bits = ($str =~ s,/(\d+)$,,) ? $1 : 32; 
+	$bits = ($str =~ s|/(\d+)$||) ? $1 : 32; 
   }
   ($str,$bits);
 }
