@@ -87,7 +87,10 @@ void patricia_remove (patricia_tree_t *patricia, patricia_node_t *node);
 patricia_tree_t *New_Patricia (int maxbits);
 void Clear_Patricia (patricia_tree_t *patricia, void_fn_t func);
 void Destroy_Patricia (patricia_tree_t *patricia, void_fn_t func);
+
 void patricia_process (patricia_tree_t *patricia, void_fn_t func);
+
+char *prefix_toa (prefix_t * prefix);
 
 /* { from demo.c */
 
