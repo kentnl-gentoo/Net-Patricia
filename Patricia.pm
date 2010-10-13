@@ -24,7 +24,7 @@ package Net::Patricia;
 use strict;
 use warnings;
 
-require 5.010;
+require 5.008;
 
 use version;
 use Carp;
@@ -38,7 +38,7 @@ BEGIN {
   @EXPORT = qw(AF_INET AF_INET6);
 }
 
-'$Revision: 1.17_20 $' =~ m/(\d+)\.(\d+)((_\d+)|)/ && ( $VERSION = "$1.$2$3");
+'$Revision: 1.17_30 $' =~ m/(\d+)\.(\d+)((_\d+)|)/ && ( $VERSION = "$1.$2$3");
 
 bootstrap Net::Patricia $VERSION;
 
