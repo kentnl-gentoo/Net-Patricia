@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Net-Patricia
-version:            1.17_30
+version:            1.17_40
 abstract:           ~
 author:  []
 license:            unknown
@@ -12,7 +12,7 @@ build_requires:
 requires:
     Net::CIDR::Lite:  0.20
     Socket6:          0
-    Test::More:       0
+    Test::More:       0.87
     version:          0
 no_index:
     directory:

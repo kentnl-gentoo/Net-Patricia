@@ -12,7 +12,7 @@ WriteMakefile(
     'dist'      => {'COMPRESS'=>'gzip -9f', 'SUFFIX' => 'gz'},
     'PREREQ_PM'	=> {'Socket6' => 0,
 		    'version' => 0,
-		    'Test::More' => 0,
+		    'Test::More' => '0.87',
 		    'Net::CIDR::Lite' => '0.20',
 		   },
 );
