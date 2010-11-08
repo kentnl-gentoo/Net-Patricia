@@ -38,7 +38,7 @@ BEGIN {
   @EXPORT = qw(AF_INET AF_INET6);
 }
 
-'$Revision: 1.18 $' =~ m/(\d+)\.(\d+)((_\d+)|)/ && ( $VERSION = "$1.$2$3");
+'$Revision: 1.18_01 $' =~ m/(\d+)\.(\d+)((_\d+)|)/ && ( $VERSION = "$1.$2$3");
 
 bootstrap Net::Patricia $VERSION;
 
@@ -216,7 +216,7 @@ BEGIN {
 
 sub add {
   my ($self, $ip, $bits, $data) = @_;
-  $data ||= $bits ? "$ip/$bits" : $ip;
+  $data ||= defined $bits ? "$ip/$bits" : $ip;
   my $packed = inet_pton(AF_INET6, $ip) || croak("invalid key");
   $self->SUPER::_add(AF_INET6,$packed,(defined $bits ? $bits : 128), $data);
 }
