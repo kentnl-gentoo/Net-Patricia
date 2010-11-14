@@ -3,6 +3,10 @@ Revision history for Perl extension Net::Patricia.
 TODO
         - add POD describing Graham Barr's API improvements
 
+1.018 Sat Oct 23 14:02 2010
+	- Remove inet_pton()
+	- version Test::More requirement
+
 1.017 Sun May 23 17:30 2010
 	- miscellaneous bug fixes
 	- add additional hybrid methods if Net::CIDR::Lite is present

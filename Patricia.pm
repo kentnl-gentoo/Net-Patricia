@@ -38,7 +38,7 @@ BEGIN {
   @EXPORT = qw(AF_INET AF_INET6);
 }
 
-'$Revision: 1.18_80 $' =~ m/(\d+)\.(\d+)((_\d+)|)/ && ( $VERSION = "$1.$2$3");
+'$Revision: 1.18_81 $' =~ m/(\d+)\.(\d+)((_\d+)|)/ && ( $VERSION = "$1.$2$3");
 
 bootstrap Net::Patricia $VERSION;
 
@@ -158,15 +158,18 @@ sub add {
   croak "add: wrong number of args" if (@_ < 2 || @_ > 4);
   my ($self, $ip, $bits, $data) = @_;
   $data = (defined $bits ? "$ip/$bits" : $ip) if (@_ < 4);
-  my $packed = inet_aton($ip) || croak("invalid key");
-  $self->SUPER::_add(AF_INET,$packed,(defined $bits ? $bits : 32), $data);
+  my $packed = inet_aton($ip);
+  croak("invalid key") unless (defined $packed);
+  $bits = 32 if (@_ < 3);
+  $self->SUPER::_add(AF_INET, $packed, $bits, $data);
 }
 
 sub add_integer {
   croak "add_integer: wrong number of args" if (@_ < 2 || @_ > 4);
   my ($self, $num, $bits, $data) = @_;
   my $packed = pack("N", $num);
-  my $ip = inet_ntoa($packed) || croak("invalid address");
+  my $ip = inet_ntoa($packed);
+  croak("invalid address") unless (defined $ip);
   $data = (defined $bits ? "$ip/$bits" : $ip) if (@_ < 4);
   $bits = 32 if (@_ < 3);
   $self->SUPER::_add(AF_INET, $packed, $bits, $data);
@@ -189,7 +192,8 @@ sub exact_integer {
 sub match {
   croak "match: wrong number of args" if (@_ < 2 || @_ > 3);
   my ($self, $ip, $bits) = @_;
-  my $packed = inet_aton($ip) || croak("invalid key");
+  my $packed = inet_aton($ip);
+  croak("invalid key") unless (defined $packed);
   $bits = 32 if (@_ < 3);
   $self->SUPER::_match(AF_INET, $packed, $bits);
 }
@@ -197,7 +201,8 @@ sub match {
 sub exact {
   croak "exact: wrong number of args" if (@_ < 2 || @_ > 3);
   my ($self, $ip, $bits) = @_;
-  my $packed = inet_aton($ip) || croak("invalid key");
+  my $packed = inet_aton($ip);
+  croak("invalid key") unless (defined $packed);
   $bits = 32 if (@_ < 3);
   $self->SUPER::_exact(AF_INET, $packed, $bits);
 }
@@ -205,7 +210,8 @@ sub exact {
 sub remove {
   croak "remove: wrong number of args" if (@_ < 2 || @_ > 3);
   my ($self, $ip, $bits) = @_;
-  my $packed = inet_aton($ip) || return undef;
+  my $packed = inet_aton($ip);
+  croak("invalid key") unless (defined $packed);
   $bits = 32 if (@_ < 3);
   $self->SUPER::_remove(AF_INET, $packed, $bits);
 }
@@ -239,7 +245,8 @@ sub add {
   croak "add: wrong number of args" if (@_ < 2 || @_ > 4);
   my ($self, $ip, $bits, $data) = @_;
   $data = (defined $bits ? "$ip/$bits" : $ip) if (@_ < 3);
-  my $packed = inet_pton(AF_INET6, $ip) || croak("invalid key");
+  my $packed = inet_pton(AF_INET6, $ip);
+  croak("invalid key") unless (defined $packed);
   $bits = 128 if (@_ < 4);
   $self->SUPER::_add(AF_INET6, $packed, $bits, $data);
 }
@@ -248,7 +255,8 @@ sub add_integer {
   croak "add_integer: wrong number of args" if (@_ < 2 || @_ > 4);
   my ($self, $num, $bits, $data) = @_;
   my $packed = pack("N", $num);
-  my $ip = inet_ntop(AF_INET6, $packed) || croak("invalid address");
+  my $ip = inet_ntop(AF_INET6, $packed);
+  croak("invalid address") unless (defined $ip);
   $data = (defined $bits ? "$ip/$bits" : $ip) if (@_ < 3);
   $bits = 128 if (@_ < 4);
   $self->SUPER::_add(AF_INET6, $packed, $bits, $data);
@@ -271,7 +279,8 @@ sub exact_integer {
 sub match {
   croak "match: wrong number of args" if (@_ < 2 || @_ > 3);
   my ($self, $ip, $bits) = @_;
-  my $packed = inet_pton(AF_INET6, $ip) || croak("invalid key");
+  my $packed = inet_pton(AF_INET6, $ip);
+  croak("invalid key") unless (defined $packed);
   $bits = 128 if (@_ < 3);
   $self->SUPER::_match(AF_INET6, $packed, $bits);
 }
@@ -279,7 +288,8 @@ sub match {
 sub exact {
   croak "exact: wrong number of args" if (@_ < 2 || @_ > 3);
   my ($self, $ip, $bits) = @_;
-  my $packed = inet_pton(AF_INET6, $ip) || croak("invalid key");
+  my $packed = inet_pton(AF_INET6, $ip);
+  croak("invalid key") unless (defined $packed);
   $bits = 128 if (@_ < 3);
   $self->SUPER::_exact(AF_INET6, $packed, $bits);
 }
@@ -287,7 +297,8 @@ sub exact {
 sub remove {
   croak "remove: wrong number of args" if (@_ < 2 || @_ > 3);
   my ($self, $ip, $bits) = @_;
-  my $packed = inet_pton(AF_INET6, $ip) || return undef;
+  my $packed = inet_pton(AF_INET6, $ip);
+  croak("invalid key") unless (defined $packed);
   $bits = 128 if (@_ < 3);
   $self->SUPER::_remove(AF_INET6, $packed, $bits);
 }
