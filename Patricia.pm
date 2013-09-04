@@ -39,7 +39,7 @@ BEGIN {
   @EXPORT = qw(AF_INET AF_INET6);
 }
 
-'$Revision: 1.20 $' =~ m/(\d+)\.(\d+)((_\d+)|)/ && ( $VERSION = "$1.$2$3");
+'$Revision: 1.21 $' =~ m/(\d+)\.(\d+)((_\d+)|)/ && ( $VERSION = "$1.$2$3");
 
 bootstrap Net::Patricia $VERSION;
 
@@ -516,9 +516,6 @@ This method is called climb() rather than walk() because climbing trees
 =back
 
 =head1 BUGS
-
-This modules does not yet support AF_INET6 (IP version 6) 128 bit
-addresses, although the underlying patricialib C code does.
 
 When passing a CODEREF argument to the climb method, the return value
 from your CODEREF subroutine is currently ignored.  In the future the
