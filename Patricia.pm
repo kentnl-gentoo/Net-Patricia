@@ -14,7 +14,8 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+#  MA  02110-1301, USA.
 
 # Dave Plonka <plonka@doit.wisc.edu>
 # Philip Prindeville <philipp@redfish-solutions.com>
@@ -39,7 +40,7 @@ BEGIN {
   @EXPORT = qw(AF_INET AF_INET6);
 }
 
-'$Revision: 1.21 $' =~ m/(\d+)\.(\d+)((_\d+)|)/ && ( $VERSION = "$1.$2$3");
+'$Revision: 1.22 $' =~ m/(\d+)\.(\d+)((_\d+)|)/ && ( $VERSION = "$1.$2$3");
 
 bootstrap Net::Patricia $VERSION;
 
@@ -313,7 +314,6 @@ sub remove_integer {
 
 1;
 __END__
-# Below is the stub of documentation for your module. You better edit it!
 
 =head1 NAME
 
@@ -334,6 +334,24 @@ Net::Patricia - Patricia Trie perl module for fast IP address lookups
   $pt->climb(sub { print "climbing at node $_[0]\n" });
 
   undef $pt; # automatically destroys the Patricia Trie
+
+  # IPv6 support:
+  $pt = new Net::Patricia AF_INET6;
+  $pt->add_string('2001:db8::/32');
+  $pt->add_string('2001:db8:0:dead::/64');
+  $pt->add_string('2001:db8:0:beef::/64');
+  $pt->climb(sub { print "climbing at node $_[0]\n" });
+  print $pt->match_string('2001:db8:0:dead::1'), "\n";
+
+  # IPv4-mapped IPv6 addresses:
+  $pt->add_string('::ffff:0:0/96');
+  for my $cidr (qw( 192.0.2.0/24 192.0.2.0/25 192.0.2.128/25 )) {
+    my($ip, $len) = split(m|/|, $cidr);
+    $pt->add_string("::ffff:$ip/" .
+	    (96+(defined($len)? $len : 32)), $cidr);
+  }
+  $pt->climb(sub { print "climbing at node $_[0]\n" });
+  print $pt->match_string("::ffff:" . "192.0.2.129"), "\n";
 
 =head1 DESCRIPTION
 
@@ -514,6 +532,11 @@ This method is called climb() rather than walk() because climbing trees
 (and therfore tries) is a more popular pass-time than walking them.
 
 =back
+
+=head2 Serialization
+
+Net::Patricia trees, unlike many classes with XS-level data, can be
+frozen and thawed using Storable.
 
 =head1 BUGS
 
